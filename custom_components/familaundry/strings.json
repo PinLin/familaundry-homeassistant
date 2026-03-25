@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FamilyMart Laundry",
+        "description": "Select the county where the store is located.",
+        "data": {
+          "country": "County/City"
+        }
+      },
+      "store": {
+        "title": "FamilyMart Laundry",
+        "description": "Select the specific store.",
+        "data": {
+          "store_id": "Store"
+        }
+      },
+      "interval": {
+        "title": "FamilyMart Laundry",
+        "description": "Set how often the status should be updated.",
+        "data": {
+          "update_interval": "Update Interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to FamilyMart API."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Settings",
+        "data": {
+          "update_interval": "Update Interval (seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Machine {seq} ({type}) Status",
+        "state": {
+          "idle": "Idle",
+          "busy": "Busy",
+          "finish": "Waiting for Pickup",
+          "offline": "Offline",
+          "unknown": "Unknown"
+        }
+      },
+      "time_remaining": {
+        "name": "Machine {seq} ({type}) Time Remaining"
+      }
+    }
+  }
+}

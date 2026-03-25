@@ -1,0 +1,7 @@
+{
+  "name": "FamilyMart Laundry",
+  "iot_class": "cloud_polling",
+  "render_readme": true,
+  "country": ["TW"],
+  "homeassistant": "2024.4.0"
+}

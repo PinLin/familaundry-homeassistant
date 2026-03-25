@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Home Assistant
+.storage/
+*.log
+*.db
+*.db-shm
+*.db-wal
+
+# OS
+.DS_Store
+.thumbs.db
+
+# Project
+.vscode/
+.idea/
+.env
