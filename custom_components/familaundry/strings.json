@@ -17,7 +17,7 @@
       },
       "interval": {
         "title": "FamilyMart Laundry",
-        "description": "Set how often the status should be updated.",
+        "description": "Set how often the machine status should be refreshed.",
         "data": {
           "update_interval": "Update Interval (seconds)"
         }
@@ -31,6 +31,7 @@
     "step": {
       "init": {
         "title": "Settings",
+        "description": "Set how often the machine status should be refreshed.",
         "data": {
           "update_interval": "Update Interval (seconds)"
         }

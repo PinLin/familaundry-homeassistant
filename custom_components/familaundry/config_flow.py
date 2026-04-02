@@ -12,6 +12,7 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize."""
         self._countries = {}
+        self._stores = {}
         self._selected_country = None
         self._selected_store_id = None
         self._selected_store_name = None
@@ -26,23 +27,24 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step - choose county."""
         errors = {}
-        
-        headers = {"User-Agent": "Mozilla/5.0"}
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(API_URL_COUNTRY, headers=headers, timeout=10) as response:
-                    if response.status == 200:
-                        json_data = await response.json()
-                        self._countries = {item["id"]: item["name"] for item in json_data.get("data", [])}
-                    else:
-                        errors["base"] = "cannot_connect"
-            except Exception:
-                errors["base"] = "cannot_connect"
 
         if user_input is not None:
             self._selected_country = user_input["country"]
             return await self.async_step_store()
-            
+
+        if not self._countries:
+            headers = {"User-Agent": "Mozilla/5.0"}
+            async with aiohttp.ClientSession() as session:
+                try:
+                    async with session.post(API_URL_COUNTRY, headers=headers, timeout=10) as response:
+                        if response.status == 200:
+                            json_data = await response.json()
+                            self._countries = {item["id"]: item["name"] for item in json_data.get("data", [])}
+                        else:
+                            errors["base"] = "cannot_connect"
+                except Exception:
+                    errors["base"] = "cannot_connect"
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
@@ -54,34 +56,35 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_store(self, user_input=None):
         """Handle the second step - choose store."""
         errors = {}
-        stores = {}
-        
-        payload = {"CountryNo": self._selected_country}
-        headers = {"Content-Type": "application/json;charset=utf-8", "User-Agent": "Mozilla/5.0"}
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(API_URL_AREA, json=payload, headers=headers, timeout=10) as response:
-                    if response.status == 200:
-                        json_data = await response.json()
-                        for area in json_data.get("data", []):
-                            area_name = area.get("AreaName", "")
-                            for shop in area.get("ShopData", []):
-                                stores[shop["id"]] = f"{area_name} - {shop['name']} ({shop['id']})"
-                    else:
-                        errors["base"] = "cannot_connect"
-            except Exception:
-                errors["base"] = "cannot_connect"
+
+        if not self._stores:
+            self._stores = {}
+            payload = {"CountryNo": self._selected_country}
+            headers = {"Content-Type": "application/json;charset=utf-8", "User-Agent": "Mozilla/5.0"}
+            async with aiohttp.ClientSession() as session:
+                try:
+                    async with session.post(API_URL_AREA, json=payload, headers=headers, timeout=10) as response:
+                        if response.status == 200:
+                            json_data = await response.json()
+                            for area in json_data.get("data", []):
+                                area_name = area.get("AreaName", "")
+                                for shop in area.get("ShopData", []):
+                                    self._stores[shop["id"]] = f"{area_name} - {shop['name']}"
+                        else:
+                            errors["base"] = "cannot_connect"
+                except Exception:
+                    errors["base"] = "cannot_connect"
 
         if user_input is not None:
             self._selected_store_id = user_input[CONF_STORE_ID]
-            self._store_label = stores.get(self._selected_store_id, f"Store {self._selected_store_id}")
-            self._selected_store_name = self._store_label.split(" (")[0]
+            self._store_label = self._stores.get(self._selected_store_id, f"Store {self._selected_store_id}")
+            self._selected_store_name = self._store_label
             return await self.async_step_interval()
             
         return self.async_show_form(
             step_id="store",
             data_schema=vol.Schema({
-                vol.Required(CONF_STORE_ID): vol.In(stores),
+                vol.Required(CONF_STORE_ID): vol.In(self._stores),
             }),
             errors=errors,
         )
@@ -104,7 +107,7 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="interval",
             data_schema=vol.Schema({
                 vol.Required(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(
-                    vol.Coerce(int), vol.Range(min=10)
+                    vol.Coerce(int), vol.Range(min=30)
                 ),
             }),
         )
@@ -124,9 +127,9 @@ class FamiLaundryOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
-                vol.Optional(
+                vol.Required(
                     CONF_UPDATE_INTERVAL,
                     default=update_interval,
-                ): vol.All(vol.Coerce(int), vol.Range(min=10)),
+                ): vol.All(vol.Coerce(int), vol.Range(min=30)),
             }),
         )

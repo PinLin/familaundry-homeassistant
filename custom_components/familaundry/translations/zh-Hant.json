@@ -17,7 +17,7 @@
       },
       "interval": {
         "title": "全家自助洗衣",
-        "description": "設定狀態更新的頻率。",
+        "description": "設定機台狀態的更新頻率。",
         "data": {
           "update_interval": "更新間隔 (秒)"
         }
@@ -30,7 +30,8 @@
   "options": {
     "step": {
       "init": {
-        "title": "設定更新間隔",
+        "title": "設定",
+        "description": "設定機台狀態的更新頻率。",
         "data": {
           "update_interval": "更新間隔 (秒)"
         }
