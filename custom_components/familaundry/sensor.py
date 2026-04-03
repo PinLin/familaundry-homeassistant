@@ -39,8 +39,7 @@ class FamiLaundryBaseSensor(CoordinatorEntity, SensorEntity):
         return {
             "identifiers": {(DOMAIN, f"{self._store_id}_{self._machine_id}")},
             "name": f"{self.machine_type} {self.machine_seq} ({self._store_name})",
-            "manufacturer": "FamilyMart",
-            "model": "Fami 自助洗衣",
+            "manufacturer": "Fami 自助洗衣",
             "configuration_url": "https://www.family.com.tw/Marketing/Laundry",
         }
 

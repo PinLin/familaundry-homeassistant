@@ -19,3 +19,5 @@ __pycache__/
 .vscode/
 .idea/
 .env
+
+.claude/settings.local.json

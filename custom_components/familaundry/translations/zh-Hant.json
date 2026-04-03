@@ -1,25 +1,26 @@
 {
+  "title": "Fami 自助洗衣",
   "config": {
     "step": {
       "user": {
-        "title": "全家自助洗衣",
+        "title": "Fami 自助洗衣",
         "description": "選擇門市所在的縣市。",
         "data": {
           "country": "縣市"
         }
       },
       "store": {
-        "title": "全家自助洗衣",
+        "title": "Fami 自助洗衣",
         "description": "選擇具體的門市。",
         "data": {
           "store_id": "門市"
         }
       },
       "interval": {
-        "title": "全家自助洗衣",
+        "title": "Fami 自助洗衣",
         "description": "設定機台狀態的更新頻率。",
         "data": {
-          "update_interval": "更新間隔 (秒)"
+          "update_interval": "更新間隔（秒）"
         }
       }
     },
@@ -33,7 +34,7 @@
         "title": "設定",
         "description": "設定機台狀態的更新頻率。",
         "data": {
-          "update_interval": "更新間隔 (秒)"
+          "update_interval": "更新間隔（秒）"
         }
       }
     }
@@ -41,7 +42,7 @@
   "entity": {
     "sensor": {
       "status": {
-        "name": "機台 {seq} ({type}) 狀態",
+        "name": "機台 {seq}（{type}）狀態",
         "state": {
           "idle": "待機",
           "busy": "使用中",
@@ -51,7 +52,7 @@
         }
       },
       "time_remaining": {
-        "name": "機台 {seq} ({type}) 剩餘時間"
+        "name": "機台 {seq}（{type}）剩餘時間"
       }
     }
   }

@@ -1,22 +1,23 @@
 {
+  "title": "Fami Laundry",
   "config": {
     "step": {
       "user": {
-        "title": "FamilyMart Laundry",
+        "title": "Fami Laundry",
         "description": "Select the county where the store is located.",
         "data": {
           "country": "County/City"
         }
       },
       "store": {
-        "title": "FamilyMart Laundry",
+        "title": "Fami Laundry",
         "description": "Select the specific store.",
         "data": {
           "store_id": "Store"
         }
       },
       "interval": {
-        "title": "FamilyMart Laundry",
+        "title": "Fami Laundry",
         "description": "Set how often the machine status should be refreshed.",
         "data": {
           "update_interval": "Update Interval (seconds)"
