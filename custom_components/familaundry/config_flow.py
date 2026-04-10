@@ -36,7 +36,7 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             headers = {"User-Agent": "Mozilla/5.0"}
             async with aiohttp.ClientSession() as session:
                 try:
-                    async with session.post(API_URL_COUNTRY, headers=headers, timeout=10) as response:
+                    async with session.post(API_URL_COUNTRY, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
                         if response.status == 200:
                             json_data = await response.json()
                             self._countries = {item["id"]: item["name"] for item in json_data.get("data", [])}
@@ -63,7 +63,7 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             headers = {"Content-Type": "application/json;charset=utf-8", "User-Agent": "Mozilla/5.0"}
             async with aiohttp.ClientSession() as session:
                 try:
-                    async with session.post(API_URL_AREA, json=payload, headers=headers, timeout=10) as response:
+                    async with session.post(API_URL_AREA, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
                         if response.status == 200:
                             json_data = await response.json()
                             for area in json_data.get("data", []):
