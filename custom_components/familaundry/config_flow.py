@@ -2,6 +2,7 @@ import aiohttp
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.helpers import selector
 from .const import DOMAIN, CONF_STORE_ID, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, API_URL_COUNTRY, API_URL_AREA
 
 class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -106,8 +107,12 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="interval",
             data_schema=vol.Schema({
-                vol.Required(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(
-                    vol.Coerce(int), vol.Range(min=30)
+                vol.Required(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=30,
+                        step=1,
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
                 ),
             }),
         )
@@ -130,6 +135,12 @@ class FamiLaundryOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(
                     CONF_UPDATE_INTERVAL,
                     default=update_interval,
-                ): vol.All(vol.Coerce(int), vol.Range(min=30)),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=30,
+                        step=1,
+                        mode=selector.NumberSelectorMode.BOX,
+                    )
+                ),
             }),
         )
