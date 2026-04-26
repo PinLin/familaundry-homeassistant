@@ -1,7 +1,7 @@
 import logging
-from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from .const import DOMAIN, CONF_STORE_ID
+from .const import DOMAIN, CONF_STORE_ID, CONF_STORE_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,20 +26,19 @@ class FamiLaundryBaseSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._machine_id = machine_id
         self._store_id = config_entry.data[CONF_STORE_ID]
-        self._store_name = config_entry.data.get("store_name", self._store_id)
-        
-        self.machine_data = self.coordinator.data[self._machine_id]
-        self.machine_type = self.machine_data["name"] # e.g., "洗+烘", "烘乾"
-        self.machine_seq = self.machine_data["seq"]
+        self._store_name = config_entry.data.get(CONF_STORE_NAME, self._store_id)
+
+        machine_data = self.coordinator.data[self._machine_id]
+        self.machine_type = machine_data["name"]  # e.g., "洗+烘", "烘乾"
+        self.machine_seq = machine_data["seq"]
 
     @property
     def device_info(self):
         """Return device information."""
-        # 我們將每一台機器建立為一個獨立裝置
         return {
             "identifiers": {(DOMAIN, f"{self._store_id}_{self._machine_id}")},
             "name": f"{self.machine_type} {self.machine_seq} ({self._store_name})",
-            "manufacturer": "Fami 自助洗衣",
+            "manufacturer": "Fami Laundry",
             "configuration_url": "https://www.family.com.tw/Marketing/Laundry",
         }
 
@@ -53,10 +52,6 @@ class FamiLaundryStatusSensor(FamiLaundryBaseSensor):
         super().__init__(coordinator, machine_id, config_entry)
         self._attr_unique_id = f"{DOMAIN}_{self._store_id}_{machine_id}_status"
         self.entity_id = f"sensor.{DOMAIN}_{self._store_id}_{machine_id}_status"
-        self._attr_translation_placeholders = {
-            "seq": str(self.machine_seq),
-            "type": self.machine_type,
-        }
 
     @property
     def icon(self):
@@ -107,10 +102,6 @@ class FamiLaundryFinishTimeSensor(FamiLaundryBaseSensor):
         super().__init__(coordinator, machine_id, config_entry)
         self._attr_unique_id = f"{DOMAIN}_{self._store_id}_{machine_id}_finish_time"
         self.entity_id = f"sensor.{DOMAIN}_{self._store_id}_{machine_id}_time_remaining"
-        self._attr_translation_placeholders = {
-            "seq": str(self.machine_seq),
-            "type": self.machine_type,
-        }
 
     @property
     def native_value(self):

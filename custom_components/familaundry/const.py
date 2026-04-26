@@ -1,7 +1,9 @@
 DOMAIN = "familaundry"
 CONF_STORE_ID = "store_id"
+CONF_STORE_NAME = "store_name"
 CONF_UPDATE_INTERVAL = "update_interval"
 DEFAULT_UPDATE_INTERVAL = 60
 API_URL = "https://familaundry.famigrp.com.tw/Wash/GetMachine"
 API_URL_COUNTRY = "https://familaundry.famigrp.com.tw/Wash/GetCountryList"
 API_URL_AREA = "https://familaundry.famigrp.com.tw/Wash/GetAREAList"
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:150.0) Gecko/20100101 Firefox/150.0"

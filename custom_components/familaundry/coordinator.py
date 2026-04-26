@@ -3,7 +3,7 @@ import logging
 from datetime import timedelta
 import aiohttp
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from .const import DOMAIN, API_URL, DEFAULT_UPDATE_INTERVAL
+from .const import DOMAIN, API_URL, DEFAULT_UPDATE_INTERVAL, USER_AGENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class FamiLaundryCoordinator(DataUpdateCoordinator):
         payload = {"store": self._store_id}
         headers = {
             "Content-Type": "application/json;charset=utf-8",
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:150.0) Gecko/20100101 Firefox/150.0",
+            "User-Agent": USER_AGENT,
         }
         timeout = aiohttp.ClientTimeout(total=_REQUEST_TIMEOUT)
         async with session.post(API_URL, json=payload, headers=headers, timeout=timeout) as response:

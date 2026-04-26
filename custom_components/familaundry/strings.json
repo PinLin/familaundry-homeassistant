@@ -3,21 +3,21 @@
   "config": {
     "step": {
       "user": {
-        "title": "Fami Laundry",
+        "title": "Select County",
         "description": "Select the county where the store is located.",
         "data": {
           "country": "County/City"
         }
       },
       "store": {
-        "title": "Fami Laundry",
+        "title": "Select Store",
         "description": "Select the specific store.",
         "data": {
           "store_id": "Store"
         }
       },
       "interval": {
-        "title": "Fami Laundry",
+        "title": "Refresh Interval",
         "description": "Set how often the machine status should be refreshed.",
         "data": {
           "update_interval": "Update Interval (seconds)"
@@ -42,7 +42,7 @@
   "entity": {
     "sensor": {
       "status": {
-        "name": "Machine {seq} ({type}) Status",
+        "name": "Status",
         "state": {
           "idle": "Idle",
           "busy": "Busy",
@@ -52,7 +52,7 @@
         }
       },
       "time_remaining": {
-        "name": "Machine {seq} ({type}) Time Remaining"
+        "name": "Time Remaining"
       }
     }
   }

@@ -3,7 +3,16 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import selector
-from .const import DOMAIN, CONF_STORE_ID, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL, API_URL_COUNTRY, API_URL_AREA
+from .const import (
+    DOMAIN,
+    CONF_STORE_ID,
+    CONF_STORE_NAME,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL,
+    API_URL_COUNTRY,
+    API_URL_AREA,
+    USER_AGENT,
+)
 
 class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """FamiLaundry config flow."""
@@ -14,6 +23,7 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._countries = {}
         self._stores = {}
+        self._store_shop_names = {}
         self._selected_country = None
         self._selected_store_id = None
         self._selected_store_name = None
@@ -34,7 +44,7 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_store()
 
         if not self._countries:
-            headers = {"User-Agent": "Mozilla/5.0"}
+            headers = {"User-Agent": USER_AGENT}
             async with aiohttp.ClientSession() as session:
                 try:
                     async with session.post(API_URL_COUNTRY, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
@@ -61,7 +71,7 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._stores:
             self._stores = {}
             payload = {"CountryNo": self._selected_country}
-            headers = {"Content-Type": "application/json;charset=utf-8", "User-Agent": "Mozilla/5.0"}
+            headers = {"Content-Type": "application/json;charset=utf-8", "User-Agent": USER_AGENT}
             async with aiohttp.ClientSession() as session:
                 try:
                     async with session.post(API_URL_AREA, json=payload, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
@@ -71,6 +81,7 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                 area_name = area.get("AreaName", "")
                                 for shop in area.get("ShopData", []):
                                     self._stores[shop["id"]] = f"{area_name} - {shop['name']}"
+                                    self._store_shop_names[shop["id"]] = shop["name"]
                         else:
                             errors["base"] = "cannot_connect"
                 except Exception:
@@ -79,7 +90,7 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._selected_store_id = user_input[CONF_STORE_ID]
             self._store_label = self._stores.get(self._selected_store_id, f"Store {self._selected_store_id}")
-            self._selected_store_name = self._store_label
+            self._selected_store_name = self._store_shop_names.get(self._selected_store_id, self._selected_store_id)
             return await self.async_step_interval()
             
         return self.async_show_form(
@@ -94,10 +105,10 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the third step - set update interval."""
         if user_input is not None:
             return self.async_create_entry(
-                title=self._store_label, 
+                title=self._store_label,
                 data={
                     CONF_STORE_ID: self._selected_store_id,
-                    "store_name": self._selected_store_name
+                    CONF_STORE_NAME: self._selected_store_name,
                 },
                 options={
                     CONF_UPDATE_INTERVAL: user_input[CONF_UPDATE_INTERVAL]
