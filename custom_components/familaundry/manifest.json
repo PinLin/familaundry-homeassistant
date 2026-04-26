@@ -2,7 +2,6 @@
   "domain": "familaundry",
   "name": "Fami Laundry",
   "documentation": "https://github.com/PinLin/familaundry-homeassistant",
-  "issue_tracker": "https://github.com/PinLin/familaundry-homeassistant/issues",
   "dependencies": [],
   "codeowners": ["@PinLin"],
   "config_flow": true,
