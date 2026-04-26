@@ -89,6 +89,8 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._selected_store_id = user_input[CONF_STORE_ID]
+            await self.async_set_unique_id(self._selected_store_id)
+            self._abort_if_unique_id_configured()
             self._store_label = self._stores.get(self._selected_store_id, f"Store {self._selected_store_id}")
             self._selected_store_name = self._store_shop_names.get(self._selected_store_id, self._selected_store_id)
             return await self.async_step_interval()

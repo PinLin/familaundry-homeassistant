@@ -16,8 +16,9 @@ _MAX_CONSECUTIVE_FAILURES = 2  # raise UpdateFailed only after this many consecu
 class FamiLaundryCoordinator(DataUpdateCoordinator):
     """FamiLaundry data update coordinator."""
 
-    def __init__(self, hass, store_id, update_interval):
+    def __init__(self, hass, session, store_id, update_interval):
         """Initialize the coordinator."""
+        self._session = session
         self._store_id = store_id
         self._consecutive_failures = 0
         super().__init__(
@@ -27,7 +28,7 @@ class FamiLaundryCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=update_interval),
         )
 
-    async def _fetch_once(self, session):
+    async def _fetch_once(self):
         """Perform a single API request and return parsed data."""
         payload = {"store": self._store_id}
         headers = {
@@ -35,7 +36,7 @@ class FamiLaundryCoordinator(DataUpdateCoordinator):
             "User-Agent": USER_AGENT,
         }
         timeout = aiohttp.ClientTimeout(total=_REQUEST_TIMEOUT)
-        async with session.post(API_URL, json=payload, headers=headers, timeout=timeout) as response:
+        async with self._session.post(API_URL, json=payload, headers=headers, timeout=timeout) as response:
             if response.status != 200:
                 raise UpdateFailed(f"API returned status {response.status}")
             json_data = await response.json(content_type=None)
@@ -46,22 +47,21 @@ class FamiLaundryCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from API with retry logic."""
         last_err = None
-        async with aiohttp.ClientSession() as session:
-            for attempt in range(_RETRY_COUNT):
-                try:
-                    data = await self._fetch_once(session)
-                    self._consecutive_failures = 0
-                    return data
-                except UpdateFailed as err:
-                    # Non-retryable API errors (bad status, wrong syscode)
-                    last_err = err
-                    _LOGGER.debug("API error on attempt %d/%d: %s", attempt + 1, _RETRY_COUNT, err)
-                except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-                    last_err = UpdateFailed(f"Network error while fetching data: {err}")
-                    _LOGGER.debug("Network error on attempt %d/%d: %s", attempt + 1, _RETRY_COUNT, err)
+        for attempt in range(_RETRY_COUNT):
+            try:
+                data = await self._fetch_once()
+                self._consecutive_failures = 0
+                return data
+            except UpdateFailed as err:
+                # Non-retryable API errors (bad status, wrong syscode)
+                last_err = err
+                _LOGGER.debug("API error on attempt %d/%d: %s", attempt + 1, _RETRY_COUNT, err)
+            except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+                last_err = UpdateFailed(f"Network error while fetching data: {err}")
+                _LOGGER.debug("Network error on attempt %d/%d: %s", attempt + 1, _RETRY_COUNT, err)
 
-                if attempt < _RETRY_COUNT - 1:
-                    await asyncio.sleep(_RETRY_DELAY)
+            if attempt < _RETRY_COUNT - 1:
+                await asyncio.sleep(_RETRY_DELAY)
 
         self._consecutive_failures += 1
         if self._consecutive_failures >= _MAX_CONSECUTIVE_FAILURES:
