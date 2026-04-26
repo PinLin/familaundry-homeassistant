@@ -4,6 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from .api import FamiLaundryApiClient
 from .const import DOMAIN, CONF_STORE_ID, CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
 from .coordinator import FamiLaundryCoordinator
 
@@ -13,9 +14,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FamiLaundry from a config entry."""
     store_id = entry.data[CONF_STORE_ID]
     update_interval = entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
-    session = async_get_clientsession(hass)
+    client = FamiLaundryApiClient(async_get_clientsession(hass))
 
-    coordinator = FamiLaundryCoordinator(hass, session, store_id, update_interval)
+    coordinator = FamiLaundryCoordinator(hass, client, store_id, update_interval)
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception as err:

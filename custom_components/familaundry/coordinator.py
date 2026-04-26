@@ -1,24 +1,83 @@
+"""Data coordinator for Fami Laundry."""
+from __future__ import annotations
+
 import asyncio
 import logging
+from dataclasses import dataclass
 from datetime import timedelta
+from typing import Any
+
 import aiohttp
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from .const import DOMAIN, API_URL, DEFAULT_UPDATE_INTERVAL, USER_AGENT
+
+from .api import FamiLaundryApiClient, FamiLaundryApiError
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 _RETRY_COUNT = 3
 _RETRY_DELAY = 5  # seconds between retries
-_REQUEST_TIMEOUT = 30  # seconds per attempt
-_MAX_CONSECUTIVE_FAILURES = 2  # raise UpdateFailed only after this many consecutive failures
+# Tolerate this many consecutive failures by returning last-known data so a
+# brief upstream blip doesn't make every machine entity flip to unavailable.
+_MAX_CONSECUTIVE_FAILURES = 2
 
 
-class FamiLaundryCoordinator(DataUpdateCoordinator):
-    """FamiLaundry data update coordinator."""
+@dataclass(frozen=True)
+class MachineData:
+    """Snapshot of one laundry machine, normalized from the API payload."""
 
-    def __init__(self, hass, session, store_id, update_interval):
-        """Initialize the coordinator."""
-        self._session = session
+    id: str
+    name: str           # 機台類型: "洗+烘"、"烘乾"
+    seq: str            # 同類型內的序號
+    status: str         # raw API code: "0" idle / "1" running / "2" offline
+    finish_time: str    # raw API code: 剩餘分鐘字串; status="1"+finish_time="0" = 待取件
+
+    @property
+    def state(self) -> str:
+        """Map raw API status + finish_time to a stable HA state string.
+
+        These are the values exposed in entity.state, so the strings.json
+        translation keys (idle/busy/finish/offline/unknown) must match.
+        """
+        if self.status == "0":
+            return "idle"
+        if self.status == "2":
+            return "offline"
+        if self.status == "1":
+            return "finish" if self.finish_time == "0" else "busy"
+        return "unknown"
+
+    @property
+    def remaining_minutes(self) -> int:
+        """Parse finish_time as int. The API sends a string, sometimes empty."""
+        try:
+            return int(self.finish_time)
+        except (ValueError, TypeError):
+            return 0
+
+
+def _to_machine(raw: dict[str, Any]) -> MachineData:
+    return MachineData(
+        id=str(raw.get("id", "")),
+        name=str(raw.get("name", "")),
+        seq=str(raw.get("seq", "")),
+        status=str(raw.get("status", "")),
+        finish_time=str(raw.get("FINISH_TIME", "")),
+    )
+
+
+class FamiLaundryCoordinator(DataUpdateCoordinator[dict[str, MachineData]]):
+    """Polls the Fami Laundry API for one store."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: FamiLaundryApiClient,
+        store_id: str,
+        update_interval: int,
+    ) -> None:
+        self._client = client
         self._store_id = store_id
         self._consecutive_failures = 0
         super().__init__(
@@ -28,49 +87,35 @@ class FamiLaundryCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=update_interval),
         )
 
-    async def _fetch_once(self):
-        """Perform a single API request and return parsed data."""
-        payload = {"store": self._store_id}
-        headers = {
-            "Content-Type": "application/json;charset=utf-8",
-            "User-Agent": USER_AGENT,
-        }
-        timeout = aiohttp.ClientTimeout(total=_REQUEST_TIMEOUT)
-        async with self._session.post(API_URL, json=payload, headers=headers, timeout=timeout) as response:
-            if response.status != 200:
-                raise UpdateFailed(f"API returned status {response.status}")
-            json_data = await response.json(content_type=None)
-            if json_data.get("syscode") != "200":
-                raise UpdateFailed(f"API returned error: {json_data.get('sysmsg')}")
-            return {machine["id"]: machine for machine in json_data.get("data", [])}
-
-    async def _async_update_data(self):
-        """Fetch data from API with retry logic."""
-        last_err = None
+    async def _async_update_data(self) -> dict[str, MachineData]:
+        last_err: Exception | None = None
         for attempt in range(_RETRY_COUNT):
             try:
-                data = await self._fetch_once()
+                machines = await self._client.async_get_machines(self._store_id)
                 self._consecutive_failures = 0
-                return data
-            except UpdateFailed as err:
-                # Non-retryable API errors (bad status, wrong syscode)
+                return {m.id: m for m in (_to_machine(raw) for raw in machines) if m.id}
+            except FamiLaundryApiError as err:
                 last_err = err
-                _LOGGER.debug("API error on attempt %d/%d: %s", attempt + 1, _RETRY_COUNT, err)
+                _LOGGER.debug(
+                    "API error on attempt %d/%d: %s", attempt + 1, _RETRY_COUNT, err
+                )
             except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-                last_err = UpdateFailed(f"Network error while fetching data: {err}")
-                _LOGGER.debug("Network error on attempt %d/%d: %s", attempt + 1, _RETRY_COUNT, err)
+                last_err = err
+                _LOGGER.debug(
+                    "Network error on attempt %d/%d: %s", attempt + 1, _RETRY_COUNT, err
+                )
 
             if attempt < _RETRY_COUNT - 1:
                 await asyncio.sleep(_RETRY_DELAY)
 
         self._consecutive_failures += 1
-        if self._consecutive_failures >= _MAX_CONSECUTIVE_FAILURES:
+        if self._consecutive_failures >= _MAX_CONSECUTIVE_FAILURES or self.data is None:
             _LOGGER.warning(
                 "FamiLaundry: %d consecutive failures, marking entities unavailable. Last error: %s",
                 self._consecutive_failures,
                 last_err,
             )
-            raise last_err
+            raise UpdateFailed(f"API failed after {_RETRY_COUNT} attempts: {last_err}")
 
         _LOGGER.warning(
             "FamiLaundry: transient failure (%d/%d), keeping last known data. Error: %s",
@@ -78,5 +123,4 @@ class FamiLaundryCoordinator(DataUpdateCoordinator):
             _MAX_CONSECUTIVE_FAILURES,
             last_err,
         )
-        # Return last known data to keep sensors available during transient failures
         return self.data
