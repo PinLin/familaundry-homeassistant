@@ -73,11 +73,17 @@ class FamiLaundryEntity(CoordinatorEntity[FamiLaundryCoordinator]):
         m = self._machine
         if m is not None:
             label = f"{m.name} {m.seq} ({self._store_name})"
+            # m.name describes the machine type ("洗+烘" / "烘乾") — surfacing
+            # it on the device's "Model" row makes the device card scannable
+            # without parsing the human-readable label above.
+            model: str | None = m.name or None
         else:
             label = f"{self._machine_id} ({self._store_name})"
+            model = None
         return DeviceInfo(
             identifiers={(DOMAIN, device_id_for(self._store_id, self._machine_id))},
             name=label,
             manufacturer="Fami Laundry",
+            model=model,
             configuration_url="https://www.family.com.tw/Marketing/Laundry",
         )

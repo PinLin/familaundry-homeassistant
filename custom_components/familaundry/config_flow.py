@@ -128,8 +128,13 @@ class FamiLaundryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class FamiLaundryOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options flow for FamiLaundry."""
+class FamiLaundryOptionsFlowHandler(config_entries.OptionsFlowWithReload):
+    """Handle options flow for FamiLaundry.
+
+    ``OptionsFlowWithReload`` (HA 2025.8+) reloads the entry automatically
+    when options change, so the integration doesn't need to register an
+    update listener.
+    """
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
