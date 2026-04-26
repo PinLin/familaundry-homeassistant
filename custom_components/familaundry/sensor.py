@@ -7,13 +7,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up FamiLaundry sensor platform."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    
+    coordinator = config_entry.runtime_data
+
     entities = []
     for machine_id in coordinator.data:
         entities.append(FamiLaundryStatusSensor(coordinator, machine_id, config_entry))
         entities.append(FamiLaundryFinishTimeSensor(coordinator, machine_id, config_entry))
-        
+
     async_add_entities(entities)
 
 class FamiLaundryBaseSensor(CoordinatorEntity, SensorEntity):
