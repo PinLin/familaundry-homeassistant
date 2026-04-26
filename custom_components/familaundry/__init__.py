@@ -12,11 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up FamiLaundry from a config entry."""
-    store_id = entry.data[CONF_STORE_ID]
-    update_interval = entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
     client = FamiLaundryApiClient(async_get_clientsession(hass))
 
-    coordinator = FamiLaundryCoordinator(hass, client, store_id, update_interval)
+    coordinator = FamiLaundryCoordinator(hass, entry, client)
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception as err:

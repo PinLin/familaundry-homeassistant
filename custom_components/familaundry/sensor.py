@@ -1,7 +1,11 @@
 """Sensor entities for Fami Laundry."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -62,6 +66,7 @@ class TimeRemainingSensor(FamiLaundryEntity, SensorEntity):
 
     _attr_native_unit_of_measurement = "min"
     _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:timer-sand"
 
     @property

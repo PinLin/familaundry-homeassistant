@@ -4,15 +4,22 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 import aiohttp
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .api import FamiLaundryApiClient, FamiLaundryApiError
-from .const import DOMAIN
+from .const import (
+    CONF_STORE_ID,
+    CONF_UPDATE_INTERVAL,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,19 +80,28 @@ class FamiLaundryCoordinator(DataUpdateCoordinator[dict[str, MachineData]]):
     def __init__(
         self,
         hass: HomeAssistant,
+        entry: ConfigEntry,
         client: FamiLaundryApiClient,
-        store_id: str,
-        update_interval: int,
     ) -> None:
+        self._entry = entry
         self._client = client
-        self._store_id = store_id
+        self._store_id: str = entry.data[CONF_STORE_ID]
         self._consecutive_failures = 0
+        self._last_update: datetime | None = None
+
+        update_interval = entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            # Unique per entry so multi-entry logs don't all collide under one logger.
+            name=f"{DOMAIN}_{entry.entry_id}",
             update_interval=timedelta(seconds=update_interval),
         )
+
+    @property
+    def last_update(self) -> datetime | None:
+        """Wall-clock time of the last successful API fetch."""
+        return self._last_update
 
     async def _async_update_data(self) -> dict[str, MachineData]:
         last_err: Exception | None = None
@@ -93,6 +109,7 @@ class FamiLaundryCoordinator(DataUpdateCoordinator[dict[str, MachineData]]):
             try:
                 machines = await self._client.async_get_machines(self._store_id)
                 self._consecutive_failures = 0
+                self._last_update = dt_util.now()
                 return {m.id: m for m in (_to_machine(raw) for raw in machines) if m.id}
             except FamiLaundryApiError as err:
                 last_err = err
