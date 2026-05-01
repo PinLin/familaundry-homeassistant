@@ -13,6 +13,7 @@
   - **使用中（Busy）**：執行洗程中。
   - **待取件（Waiting for Pickup）**：洗程結束，提醒使用者前往取衣。
 - **自訂更新頻率**：可視需求調整資料抓取間隔。
+- **手動更新服務**：提供 `familaundry.update`，可更新全部門市或指定 `store_ids`。
 
 ## 安裝方式
 
@@ -38,6 +39,27 @@
 2. 搜尋 **Fami Laundry**。
 3. 依照步驟選擇**縣市**與**門市**。
 4. 完成後，機台將會顯示在裝置清單中。
+
+## 裝置與屬性
+
+- 每台機器會建立為獨立裝置。
+- 裝置型號欄位會顯示門市 ID，例如 `021112`。
+- 實體屬性會顯示 `store_id`，可用於手動更新服務。
+
+## 服務
+
+### `familaundry.update`
+
+手動更新 Fami Laundry 機台狀態。
+
+```yaml
+service: familaundry.update
+data:
+  store_ids:
+    - "021112"
+```
+
+`store_ids` 留空時會更新所有已設定的門市。
 
 ## 授權
 [MIT License](LICENSE)
