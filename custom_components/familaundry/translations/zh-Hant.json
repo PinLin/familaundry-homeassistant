@@ -55,5 +55,17 @@
         "name": "剩餘時間"
       }
     }
+  },
+  "services": {
+    "update": {
+      "name": "手動更新",
+      "description": "手動更新 Fami 自助洗衣的機台狀態。",
+      "fields": {
+        "store_ids": {
+          "name": "門市 ID",
+          "description": "指定要更新的門市 ID 清單，留空則更新全部門市。"
+        }
+      }
+    }
   }
 }

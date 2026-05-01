@@ -1,0 +1,12 @@
+update:
+  name: Update
+  description: Refresh Fami Laundry data.
+  fields:
+    store_ids:
+      name: Store IDs
+      description: Store IDs to refresh. Leave empty to refresh all stores.
+      required: false
+      example: ["12345"]
+      selector:
+        text:
+          multiple: true

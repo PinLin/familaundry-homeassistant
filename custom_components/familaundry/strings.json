@@ -55,5 +55,17 @@
         "name": "Time Remaining"
       }
     }
+  },
+  "services": {
+    "update": {
+      "name": "Refresh laundry data",
+      "description": "Manually refresh Fami Laundry machine status.",
+      "fields": {
+        "store_ids": {
+          "name": "Store IDs",
+          "description": "Store IDs to refresh. Leave empty to refresh all stores."
+        }
+      }
+    }
   }
 }

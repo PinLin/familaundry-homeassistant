@@ -1,6 +1,8 @@
 """Shared entity helpers for Fami Laundry."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -69,21 +71,19 @@ class FamiLaundryEntity(CoordinatorEntity[FamiLaundryCoordinator]):
         return self.coordinator.data.get(self._machine_id)
 
     @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return {"store_id": self._store_id}
+
+    @property
     def device_info(self) -> DeviceInfo:
         m = self._machine
         if m is not None:
             label = f"{m.name} {m.seq} ({self._store_name})"
-            # m.name describes the machine type ("洗+烘" / "烘乾") — surfacing
-            # it on the device's "Model" row makes the device card scannable
-            # without parsing the human-readable label above.
-            model: str | None = m.name or None
         else:
             label = f"{self._machine_id} ({self._store_name})"
-            model = None
         return DeviceInfo(
             identifiers={(DOMAIN, device_id_for(self._store_id, self._machine_id))},
             name=label,
             manufacturer="Fami Laundry",
-            model=model,
-            configuration_url="https://www.family.com.tw/Marketing/Laundry",
+            model=self._store_id,
         )
