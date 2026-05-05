@@ -67,7 +67,6 @@ class TimeRemainingSensor(FamiLaundryEntity, SensorEntity):
     _attr_native_unit_of_measurement = "min"
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_icon = "mdi:timer-sand"
 
     @property
     def native_value(self) -> int | None:

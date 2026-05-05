@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "time_remaining": {
+        "default": "mdi:timer-sand"
+      }
+    }
+  }
+}
