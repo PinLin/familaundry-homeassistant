@@ -1,0 +1,66 @@
+name: Bug report
+description: Something is broken or behaving unexpectedly.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill in as much detail as you can — most importantly, **attach a diagnostics dump** (Settings → Devices & Services → Fami Laundry → ⋮ → Download diagnostics). Without it, root-causing API behaviour is usually impossible.
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: e.g. 2026.4.2
+    validations:
+      required: true
+
+  - type: input
+    id: integration_version
+    attributes:
+      label: Integration version
+      description: Find it under Settings → Devices & Services → Fami Laundry → ⋮ → System info, or in `manifest.json`.
+      placeholder: e.g. 0.1.7
+    validations:
+      required: true
+
+  - type: input
+    id: store
+    attributes:
+      label: Store
+      description: County and store name where the issue happens (helps identify region-specific API differences).
+      placeholder: e.g. 台北市 / 復興店
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. Include the entity that misbehaves and the value you saw vs. what you expected.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. See ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Set the integration to debug logging (`logger.set_level: { custom_components.familaundry: debug }`) and paste the relevant lines.
+      render: text
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Attach the diagnostics JSON downloaded from Settings → Devices & Services → Fami Laundry → ⋮ → Download diagnostics. Drag-and-drop the file into this field.
+    validations:
+      required: true
