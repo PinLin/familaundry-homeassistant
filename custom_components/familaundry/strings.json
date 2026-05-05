@@ -67,5 +67,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "polling_failing": {
+      "title": "Fami Laundry API unreachable",
+      "description": "Sustained polling failures for store {store_id}. Check that Home Assistant can reach the FamilyMart API and review the integration log for details. The notification clears automatically once polling succeeds again."
+    }
   }
 }

@@ -10,6 +10,7 @@ from typing import Any
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -28,6 +29,11 @@ _RETRY_DELAY = 5  # seconds between retries
 # Tolerate this many consecutive failures by returning last-known data so a
 # brief upstream blip doesn't make every machine entity flip to unavailable.
 _MAX_CONSECUTIVE_FAILURES = 2
+# Threshold for surfacing a repair issue. With the default 60s polling
+# cadence this is ~10 minutes of sustained failure — enough that a real
+# outage is happening and not just a transient blip.
+_FAILURES_BEFORE_ISSUE = 10
+ISSUE_POLLING_FAILING = "polling_failing"
 
 
 @dataclass(frozen=True)
@@ -110,6 +116,7 @@ class FamiLaundryCoordinator(DataUpdateCoordinator[dict[str, MachineData]]):
                 machines = await self._client.async_get_machines(self._store_id)
                 self._consecutive_failures = 0
                 self._last_update = dt_util.now()
+                self._clear_polling_issue()
                 return {m.id: m for m in (_to_machine(raw) for raw in machines) if m.id}
             except FamiLaundryApiError as err:
                 last_err = err
@@ -126,6 +133,9 @@ class FamiLaundryCoordinator(DataUpdateCoordinator[dict[str, MachineData]]):
                 await asyncio.sleep(_RETRY_DELAY)
 
         self._consecutive_failures += 1
+        if self._consecutive_failures >= _FAILURES_BEFORE_ISSUE:
+            self._raise_polling_issue()
+
         if self._consecutive_failures >= _MAX_CONSECUTIVE_FAILURES or self.data is None:
             _LOGGER.warning(
                 "FamiLaundry: %d consecutive failures, marking entities unavailable. Last error: %s",
@@ -141,3 +151,21 @@ class FamiLaundryCoordinator(DataUpdateCoordinator[dict[str, MachineData]]):
             last_err,
         )
         return self.data
+
+    def _raise_polling_issue(self) -> None:
+        """Surface a Repairs entry once sustained polling failure crosses the threshold."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"{ISSUE_POLLING_FAILING}_{self._entry.entry_id}",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=ISSUE_POLLING_FAILING,
+            translation_placeholders={"store_id": self._store_id},
+        )
+
+    def _clear_polling_issue(self) -> None:
+        """Drop the Repairs entry once the next refresh succeeds."""
+        ir.async_delete_issue(
+            self.hass, DOMAIN, f"{ISSUE_POLLING_FAILING}_{self._entry.entry_id}"
+        )

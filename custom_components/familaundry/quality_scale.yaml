@@ -77,7 +77,7 @@ rules:
   exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues: done
   stale-devices: todo
 
   # Platinum

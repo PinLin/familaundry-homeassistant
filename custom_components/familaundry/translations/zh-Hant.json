@@ -67,5 +67,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "polling_failing": {
+      "title": "無法連線至 Fami 自助洗衣 API",
+      "description": "門市 {store_id} 的資料更新已連續失敗。請確認 Home Assistant 可以連到外部網路，並查看整合的紀錄取得詳細錯誤。連線恢復後，這則通知會自動消失。"
+    }
   }
 }
