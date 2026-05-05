@@ -61,5 +61,37 @@ data:
 
 `store_ids` 留空時會更新所有已設定的門市。
 
+## 疑難排解
+
+### 機台狀態長時間沒有更新
+1. 確認 Home Assistant 的網路可以正常連到外部。Fami Laundry API 偶爾會短暫回應錯誤，本整合會自動重試；若連續多次失敗，會在**設定** > **修復**中顯示通知。
+2. 在**設定** > **裝置與服務** > **Fami Laundry**將更新間隔調短，重新拉一次資料。
+3. 透過 `familaundry.update` 服務手動觸發更新。
+
+### 想看更詳細的紀錄
+在 `configuration.yaml` 加入：
+
+```yaml
+logger:
+  logs:
+    custom_components.familaundry: debug
+```
+
+重啟後，相關紀錄會出現在 Home Assistant 的系統紀錄中。
+
+### 提交 Issue
+請在**設定** > **裝置與服務** > **Fami Laundry** > 三個點 > **下載診斷資料**取得 JSON，連同 Home Assistant 版本與重現步驟一起附上，能大幅縮短排查時間。
+
+## 移除整合
+
+1. 前往**設定** > **裝置與服務**。
+2. 點選 **Fami Laundry** 整合卡片。
+3. 點選右上角三個點 > **刪除**。
+4. 若不再需要本整合的程式碼，可在**HACS**中將其移除，或手動刪除 `config/custom_components/familaundry/` 資料夾。
+
+## 免責聲明
+
+本整合為非官方、社群維護的專案，與全家便利商店股份有限公司無任何關係。資料來源為 Fami 自助洗衣公開的網頁 API；若該 API 異動或停止服務，本整合可能無法繼續運作。
+
 ## 授權
 [MIT License](LICENSE)
