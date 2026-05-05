@@ -33,6 +33,7 @@ class StatusSensor(FamiLaundryEntity, SensorEntity):
     """Machine status: idle / busy / finish / offline / unknown."""
 
     _attribute = "status"
+    _state_attrs = ("native_value", "icon", "available")
 
     @property
     def icon(self) -> str:
@@ -63,6 +64,7 @@ class TimeRemainingSensor(FamiLaundryEntity, SensorEntity):
     # …but keep the original unique_id suffix so existing entries don't get
     # reissued as duplicates after the refactor.
     _legacy_uid_suffix = "finish_time"
+    _state_attrs = ("native_value", "available")
 
     _attr_native_unit_of_measurement = "min"
     _attr_device_class = SensorDeviceClass.DURATION
