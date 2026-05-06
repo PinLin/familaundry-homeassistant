@@ -4,15 +4,17 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .api import FamiLaundryApiClient, FamiLaundryApiError
 from .const import (
@@ -80,7 +82,7 @@ def _to_machine(raw: dict[str, Any]) -> MachineData:
     )
 
 
-class FamiLaundryCoordinator(DataUpdateCoordinator[dict[str, MachineData]]):
+class FamiLaundryCoordinator(TimestampDataUpdateCoordinator[dict[str, MachineData]]):
     """Polls the Fami Laundry API for one store."""
 
     def __init__(
@@ -93,7 +95,6 @@ class FamiLaundryCoordinator(DataUpdateCoordinator[dict[str, MachineData]]):
         self._client = client
         self._store_id: str = entry.data[CONF_STORE_ID]
         self._consecutive_failures = 0
-        self._last_update: datetime | None = None
 
         update_interval = entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
         super().__init__(
@@ -104,18 +105,12 @@ class FamiLaundryCoordinator(DataUpdateCoordinator[dict[str, MachineData]]):
             update_interval=timedelta(seconds=update_interval),
         )
 
-    @property
-    def last_update(self) -> datetime | None:
-        """Wall-clock time of the last successful API fetch."""
-        return self._last_update
-
     async def _async_update_data(self) -> dict[str, MachineData]:
         last_err: Exception | None = None
         for attempt in range(_RETRY_COUNT):
             try:
                 machines = await self._client.async_get_machines(self._store_id)
                 self._consecutive_failures = 0
-                self._last_update = dt_util.now()
                 self._clear_polling_issue()
                 return {m.id: m for m in (_to_machine(raw) for raw in machines) if m.id}
             except FamiLaundryApiError as err:
