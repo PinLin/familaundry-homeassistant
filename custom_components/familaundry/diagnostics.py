@@ -66,6 +66,7 @@ async def async_get_device_diagnostics(
     reports without asking for screenshots.
     """
     coordinator = entry.runtime_data
+    last_update_time = coordinator.last_update_success_time
 
     # Resolve machine_id from the device's identifiers; entity.py builds
     # device_id_for(store_id, machine_id) → "<store>_<machine>". The
@@ -113,6 +114,12 @@ async def async_get_device_diagnostics(
             "manufacturer": device.manufacturer,
             "model": device.model,
             "identifiers": [list(i) for i in device.identifiers],
+        },
+        "coordinator": {
+            "last_update_success_time": (
+                last_update_time.isoformat() if last_update_time else None
+            ),
+            "last_update_success": coordinator.last_update_success,
         },
         "machine_id": machine_id,
         "machine": (

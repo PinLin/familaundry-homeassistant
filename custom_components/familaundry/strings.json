@@ -53,6 +53,9 @@
       },
       "time_remaining": {
         "name": "Time Remaining"
+      },
+      "last_update": {
+        "name": "Last updated"
       }
     }
   },

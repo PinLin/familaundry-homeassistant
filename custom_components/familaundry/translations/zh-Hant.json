@@ -53,6 +53,9 @@
       },
       "time_remaining": {
         "name": "剩餘時間"
+      },
+      "last_update": {
+        "name": "最後更新時間"
       }
     }
   },

@@ -1,6 +1,8 @@
 """Sensor entities for Fami Laundry."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -8,6 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import FamiLaundryCoordinator
@@ -26,6 +29,7 @@ async def async_setup_entry(
     for machine_id in (coordinator.data or {}):
         entities.append(StatusSensor(coordinator, machine_id, config_entry))
         entities.append(TimeRemainingSensor(coordinator, machine_id, config_entry))
+        entities.append(LastUpdateSensor(coordinator, machine_id, config_entry))
     async_add_entities(entities)
 
 
@@ -74,3 +78,17 @@ class TimeRemainingSensor(FamiLaundryEntity, SensorEntity):
     def native_value(self) -> int | None:
         m = self._machine
         return m.remaining_minutes if m else None
+
+
+class LastUpdateSensor(FamiLaundryEntity, SensorEntity):
+    """Diagnostic timestamp: when the coordinator last completed a successful refresh."""
+
+    _attribute = "last_update"
+    _state_attrs = ("native_value", "available")
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def native_value(self) -> datetime | None:
+        return self.coordinator.last_update_success_time
