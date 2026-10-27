@@ -2,7 +2,6 @@
 
 [![GitHub Release](https://img.shields.io/github/release/PinLin/familaundry-homeassistant.svg?style=flat-square)](https://github.com/PinLin/familaundry-homeassistant/releases)
 [![HACS Badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square)](https://github.com/hacs/integration)
-[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 將全家自助洗衣（Fami 自助洗衣）的機台狀態整合到 Home Assistant，提供即時的洗烘進度監控。
 
@@ -92,6 +91,3 @@ logger:
 ## 免責聲明
 
 本整合為非官方、社群維護的專案，與全家便利商店股份有限公司無任何關係。資料來源為 Fami 自助洗衣公開的網頁 API；若該 API 異動或停止服務，本整合可能無法繼續運作。
-
-## 授權
-[MIT License](LICENSE)
